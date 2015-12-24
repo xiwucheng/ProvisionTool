@@ -575,6 +575,8 @@ void CProvisionToolDlg::OnOK()
 	if (!m_bConnected)
 	{
 		MessageBox(_T("设备未连接，请先连接设备！"),_T("错误"),MB_ICONWARNING);
+		SetDlgItemText(IDC_SN,_T(""));
+		GetDlgItem(IDC_SN)->SetFocus();
 		return;
 	}
 	if (!m_bRun)
@@ -613,6 +615,7 @@ void CProvisionToolDlg::OnBnClickedBrowse()
 		WvPath.Format(_T("%s"), path);
 		GetDlgItem(IDC_KEYPATH)->SetWindowTextW(WvPath);
 	} 
+	GetDlgItem(IDC_SN)->SetFocus();
 }
 
 void CProvisionToolDlg::OnBnClickedWrite()
@@ -701,6 +704,7 @@ void CProvisionToolDlg::ReadDevice(void)
 		pCtrl->SetPos(0);
 		((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hFailureBitmap);
 	}
+	GetDlgItem(IDC_SN)->SetFocus();
 	delete pdm;
 }
 
@@ -713,8 +717,11 @@ int CProvisionToolDlg::WriteDevice(void)
 	CProgressCtrl* pCtrl = (CProgressCtrl*)GetDlgItem(IDC_BURNPRG);
 	((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hNABitmap);
 	pCtrl->SetPos(0);
+
 	if(filePath == _T("")) {
 		MessageBox(_T("请指定keybox所在文件夹"), _T("警告"), MB_ICONWARNING);
+		SetDlgItemText(IDC_SN,_T(""));
+		GetDlgItem(IDC_SN)->SetFocus();
 		return -1;
 	}
 
@@ -723,6 +730,8 @@ int CProvisionToolDlg::WriteDevice(void)
 	if (snStr.GetLength() == 0)
 	{
 		MessageBox(_T("请输入SN号码"), _T("警告"), MB_ICONWARNING);
+		SetDlgItemText(IDC_SN,_T(""));
+		GetDlgItem(IDC_SN)->SetFocus();
 		return -1;
 	}
 
@@ -764,6 +773,8 @@ int CProvisionToolDlg::WriteDevice(void)
 	delete szSNStr;
 	if(fileName == _T("")) {
 		MessageBox(_T("没有找到可用的keybox文件"), _T("错误"), MB_ICONERROR);
+		SetDlgItemText(IDC_SN,_T(""));
+		GetDlgItem(IDC_SN)->SetFocus();
 		return -1;
 	}
 
@@ -835,12 +846,16 @@ int CProvisionToolDlg::WriteDevice(void)
 	CreateDirectory(outDir,NULL);
 	outDir = outDir+fileName.Right(fileName.GetLength()-pos2);
 	MoveFileEx(fileName,outDir,MOVEFILE_REPLACE_EXISTING);
+	SetDlgItemText(IDC_SN,_T(""));
+	GetDlgItem(IDC_SN)->SetFocus();
 	delete pdm;
 	return 0;
 __err:
 	pCtrl->SetPos(0);
 	delete pdm;
 	((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hFailureBitmap);
+	SetDlgItemText(IDC_SN,_T(""));
+	GetDlgItem(IDC_SN)->SetFocus();
 	return -1;
 }
 

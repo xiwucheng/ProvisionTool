@@ -74,7 +74,7 @@ IDR_MAINFRAME           ICON                    "res\\ProvisionTool.ico"
 IDD_PROVISIONTOOL_DIALOG DIALOGEX 0, 0, 265, 289
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "ProvisionTool_v1.0.1"
+CAPTION "ProvisionTool_v1.0.2"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_SN,47,42,92,14,ES_AUTOHSCROLL
@@ -103,8 +103,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,2,0
+ PRODUCTVERSION 1,0,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -122,12 +122,12 @@ BEGIN
             VALUE "Comments", "Author: Kelvin Cheng"
             VALUE "CompanyName", "Techvision Intelligent Technology Corporation"
             VALUE "FileDescription", "Provision Tool"
-            VALUE "FileVersion", "1.0.1"
+            VALUE "FileVersion", "1.0.2"
             VALUE "InternalName", "ProvisionTool.exe"
-            VALUE "LegalCopyright", "(c) <Techvision Intelligent Technology Corporation>.  All rights reserved."
+            VALUE "LegalCopyright", "(c) <Techvision Intelligent Technology Corporation>.  2015.12 All rights reserved."
             VALUE "OriginalFilename", "ProvisionTool.exe"
             VALUE "ProductName", "Provision Tool"
-            VALUE "ProductVersion", "1.0.1"
+            VALUE "ProductVersion", "1.0.2"
         END
     END
     BLOCK "VarFileInfo"
