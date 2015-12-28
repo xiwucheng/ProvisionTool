@@ -72,28 +72,31 @@ IDR_MAINFRAME           ICON                    "res\\ProvisionTool.ico"
 //
 
 IDD_PROVISIONTOOL_DIALOG DIALOGEX 0, 0, 265, 289
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "ProvisionTool_v1.0.2"
+CAPTION "ProvisionTool_v1.0.3"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_SN,47,42,92,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_KEYPATH,47,63,158,14,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "浏览...",IDC_BROWSE,209,61,50,17
-    EDITTEXT        IDC_CMDLOG,4,96,257,188,ES_MULTILINE | ES_READONLY | WS_VSCROLL
-    CONTROL         129,IDC_STATUS,"Static",SS_BITMAP,210,13,48,17,WS_EX_STATICEDGE
-    GROUPBOX        "执行结果:",IDC_STATIC,1,85,262,203
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | WS_DISABLED,0,35,265,1,WS_EX_STATICEDGE
-    RTEXT           "SN:",IDC_STATIC,24,45,17,10
-    RTEXT           "KBox路径:",IDC_STATIC,5,66,36,10
-    DEFPUSHBUTTON   "烧写",IDC_WRITE,151,40,50,17
-    PUSHBUTTON      "读取",IDC_READ,209,40,50,17
-    LTEXT           "连接状态：",IDC_STATIC,216,1,42,8
-    LTEXT           "烧写状态：",IDC_STATIC,160,1,40,8
-    CONTROL         "",IDC_BURNPRG,"msctls_progress32",WS_BORDER | 0x1,7,13,132,17,WS_EX_STATICEDGE
-    LTEXT           "烧写进度：",IDC_STATIC,48,1,40,8
-    CONTROL         133,IDC_STATUS2,"Static",SS_BITMAP,154,13,48,17,WS_EX_STATICEDGE
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | WS_DISABLED,0,82,265,1,WS_EX_STATICEDGE
+    EDITTEXT        IDC_SN,47,60,92,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_KEYPATH,47,81,158,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "浏览...",IDC_BROWSE,209,79,50,17
+    EDITTEXT        IDC_CMDLOG,4,115,257,169,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+    CONTROL         129,IDC_STATUS,"Static",SS_BITMAP,210,33,48,17,WS_EX_STATICEDGE
+    GROUPBOX        "执行结果:",IDC_STATIC,1,104,262,184
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | WS_DISABLED,0,55,265,1,WS_EX_STATICEDGE
+    RTEXT           "SN:",IDC_STATIC,24,63,17,10
+    RTEXT           "KBox路径:",IDC_STATIC,5,84,36,10
+    DEFPUSHBUTTON   "烧写",IDC_WRITE,151,58,50,17
+    PUSHBUTTON      "读取",IDC_READ,209,58,50,17
+    LTEXT           "连接状态：",IDC_STATIC,216,21,42,8
+    LTEXT           "烧写状态：",IDC_STATIC,160,21,40,8
+    CONTROL         "",IDC_BURNPRG,"msctls_progress32",WS_BORDER | 0x1,7,33,132,17,WS_EX_STATICEDGE
+    LTEXT           "烧写进度：",IDC_STATIC,48,21,40,8
+    CONTROL         133,IDC_STATUS2,"Static",SS_BITMAP,154,33,48,17,WS_EX_STATICEDGE
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | WS_DISABLED,0,100,265,1,WS_EX_STATICEDGE
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | WS_DISABLED,0,18,265,1,WS_EX_STATICEDGE
+    LTEXT           "设备序列号：",IDC_STATIC,2,5,48,8
+    EDITTEXT        IDC_SERIALNUM,52,3,208,13,ES_READONLY | ES_WANTRETURN
 END
 
 
@@ -103,8 +106,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,2,0
- PRODUCTVERSION 1,0,2,0
+ FILEVERSION 1,0,3,0
+ PRODUCTVERSION 1,0,3,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -122,12 +125,12 @@ BEGIN
             VALUE "Comments", "Author: Kelvin Cheng"
             VALUE "CompanyName", "Techvision Intelligent Technology Corporation"
             VALUE "FileDescription", "Provision Tool"
-            VALUE "FileVersion", "1.0.2"
+            VALUE "FileVersion", "1.0.3"
             VALUE "InternalName", "ProvisionTool.exe"
             VALUE "LegalCopyright", "(c) <Techvision Intelligent Technology Corporation>.  2015.12 All rights reserved."
             VALUE "OriginalFilename", "ProvisionTool.exe"
             VALUE "ProductName", "Provision Tool"
-            VALUE "ProductVersion", "1.0.2"
+            VALUE "ProductVersion", "1.0.3"
         END
     END
     BLOCK "VarFileInfo"

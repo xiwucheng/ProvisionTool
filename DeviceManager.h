@@ -28,34 +28,26 @@
 #pragma once
 
 
-class DeviceManager
+class CDeviceManager
 {
 public:
-	DeviceManager();
-	~DeviceManager(void);
+	CDeviceManager();
+	~CDeviceManager(void);
 	CString getAndroidDevices();
+	CString getAndroidDeviceSerialNumber();
+	CString getAndroidDeviceVendor();
 	BOOL hasAndroidDevices();
-	CStringList m_list;
+	BOOL adbProcess();
+	BOOL RemoteCmd(LPTSTR lpCmd, LPTSTR lpCmdline);	
+	CString GetCmdResult() { return m_Result;}
+private:
+	CRITICAL_SECTION m_cs;
 	BOOL m_Scuccess;
+	CStringList m_list;
 	CString m_Result;
-	HANDLE m_ChildOut_Read;
+	HANDLE m_hReadOutPipe;
 	HANDLE m_hThread;
-	void DeviceManager::adbProcess() ;
-	CString adbPushToSdcard(LPCWSTR cmd);
-	static DWORD WINAPI ThreadProcRorProcess ( LPVOID lpParam );
-	static DWORD WINAPI ThreadProcRorProcess2 ( LPVOID lpParam );
-	static DWORD WINAPI TXEThreadRorProcess ( LPVOID lpParam );
-	void Split(const CString& src, CString delimit, CStringList* pOutList, int num, CString nullSubst) ;
-	BOOL ftServerIsStarted();
-	BOOL ftExecuableFileExsits();
-	BOOL TXEExecutableFileExsits();
-	BOOL CC6_UMIP_ACCESS_APPExecutableFileExsits();
-	void adbShellProcess(LPWSTR str);
-
-	void adbShellTXEProcess(LPWSTR pStr);
-	void adbShellTXE(LPCWSTR cmd);
-
-	
-	
+	static DWORD WINAPI ThreadProcForCmd ( LPVOID lpParam );
+	void Split(const CString& src, CString delimit, int num, CString nullSubst) ;
 };
 

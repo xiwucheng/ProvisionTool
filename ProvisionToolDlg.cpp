@@ -95,7 +95,8 @@ BOOL CProvisionToolDlg::OnInitDialog()
 	m_hSuccessBitmap = LoadBitmap(AfxGetInstanceHandle(),MAKEINTRESOURCE(IDB_SUCESS));
 	m_hFailureBitmap = LoadBitmap(AfxGetInstanceHandle(),MAKEINTRESOURCE(IDB_FAILURE));
 	m_hDevNotify = RegisterDeviceNotification(m_hWnd, &dbi, DEVICE_NOTIFY_ALL_INTERFACE_CLASSES);//DEVICE_NOTIFY_ALL_INTERFACE_CLASSES
-	if (Connect_device() == 0)
+	CDeviceManager* pdm = new CDeviceManager();
+	if (Connect_device() == 0 && pdm->getAndroidDeviceVendor().Find(_T("VID_8087")) != -1)
 	{
 		m_bConnected = TRUE;
 		((CStatic*)GetDlgItem(IDC_STATUS))->SetBitmap(m_hMountBitmap);
@@ -105,6 +106,9 @@ BOOL CProvisionToolDlg::OnInitDialog()
 		m_bConnected = FALSE;
 		((CStatic*)GetDlgItem(IDC_STATUS))->SetBitmap(m_hDeleteBitmap);
 	}
+	CString tmpStr = pdm->getAndroidDeviceSerialNumber();
+	SetDlgItemText(IDC_SERIALNUM,tmpStr);
+	delete pdm;
 	CProgressCtrl* pCtrl = (CProgressCtrl*)GetDlgItem(IDC_BURNPRG);
 	pCtrl->SetRange(0,100);
 	((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hNABitmap);
@@ -173,6 +177,10 @@ LRESULT CProvisionToolDlg::DefWindowProc(UINT message, WPARAM wParam, LPARAM lPa
 						{
 							m_bConnected = TRUE;
 							((CStatic*)GetDlgItem(IDC_STATUS))->SetBitmap(m_hMountBitmap);
+							CDeviceManager* pdm = new CDeviceManager();
+							CString tmpStr = pdm->getAndroidDeviceSerialNumber();
+							SetDlgItemText(IDC_SERIALNUM,tmpStr);
+							delete pdm;
 						}
 					}	
 				} 
@@ -185,6 +193,10 @@ LRESULT CProvisionToolDlg::DefWindowProc(UINT message, WPARAM wParam, LPARAM lPa
 					if (devName.Find(_T("vid_8087")) != -1) {
 						m_bConnected = FALSE;
 						((CStatic*)GetDlgItem(IDC_STATUS))->SetBitmap(m_hDeleteBitmap);
+						SetDlgItemText(IDC_SERIALNUM,_T(""));
+						CProgressCtrl* pCtrl = (CProgressCtrl*)GetDlgItem(IDC_BURNPRG);
+						((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hNABitmap);
+						pCtrl->SetPos(0);
 					}	
 				} 
 				break;
@@ -198,9 +210,10 @@ LRESULT CProvisionToolDlg::DefWindowProc(UINT message, WPARAM wParam, LPARAM lPa
 
 int CProvisionToolDlg::Connect_device(void)
 {
-	DeviceManager * pdm = new DeviceManager();
+	CDeviceManager * pdm = new CDeviceManager();
 	CString deviceName = pdm->getAndroidDevices();
 	int retryCount = 10;
+	CString tmpStr;
 	while(deviceName.IsEmpty() && retryCount != 0) {
 		deviceName = pdm->getAndroidDevices();
 		retryCount--;
@@ -325,7 +338,7 @@ int CProvisionToolDlg::BuildSN(CString snStr)
 	CStdioFile writeSNFile;
 	if(writeSNFile.Open(_T("./writeSNFile") ,CFile::modeReadWrite | CFile::modeCreate)) {
 		char * snchar = String2MultiChar(snStr);
-		writeSNFile.Write(snchar, strlen(snchar));
+		writeSNFile.Write(snchar, (DWORD)strlen(snchar));
 		writeSNFile.Close();
 		delete[] snchar;
 		return 0;
@@ -346,36 +359,35 @@ int CProvisionToolDlg::WriteSN(int len)
 		AddLog(_T("SN 文件不存在!"));
 		return -1;
 	}
-	DeviceManager* pdm = new DeviceManager(); 
+	CDeviceManager* pdm = new CDeviceManager(); 
 	
-	AddLog(pdm->adbPushToSdcard(_T(" flash txefileset ./writeSNFile")));
-	if (!pdm->m_Scuccess)
+	if (!pdm->RemoteCmd(_T("fastboot.exe"), _T(" flash txefileset ./writeSNFile")))
 	{
 		goto __end;
 	}
+	AddLog(pdm->GetCmdResult());
 	tmpStr.Format(_T("%s %d %d"), _T(" oem txe TXEI_SEC_TOOLS -acd-write 18 /logs/tmp"), len, 100);
-	AddLog(pdm->adbPushToSdcard(tmpStr));
-	if (!pdm->m_Scuccess)
+	if (!pdm->RemoteCmd(_T("fastboot.exe"), (LPTSTR)(LPCTSTR)tmpStr))
 	{
 		goto __end;
 	}
-	AddLog(pdm->adbPushToSdcard(_T(" oem txe TXEI_SEC_TOOLS -acd-read 18 /logs/readSNFile")));
-	if (!pdm->m_Scuccess)
+	AddLog(pdm->GetCmdResult());
+	if (!pdm->RemoteCmd(_T("fastboot.exe"), _T(" oem txe TXEI_SEC_TOOLS -acd-read 18 /logs/readSNFile")))
 	{
 		goto __end;
 	}
-	AddLog(pdm->adbPushToSdcard(_T(" oem txe cat /logs/readSNFile")));
-	if (!pdm->m_Scuccess)
+	AddLog(pdm->GetCmdResult());
+	if (!pdm->RemoteCmd(_T("fastboot.exe"), _T(" oem txe cat /logs/readSNFile")))
 	{
 		goto __end;
 	}
+	AddLog(pdm->GetCmdResult());
 
-	//AddLog(_T("SN 烧写成功!\r\n"));
 	delete pdm;
 	return 0;
 
 __end:
-	//AddLog(_T("SN 烧写失败!\r\n"));
+	AddLog(pdm->GetCmdResult());
 	delete pdm;
 	return -1;
 }
@@ -395,31 +407,24 @@ int CProvisionToolDlg::WriteKeyBox(void)
 
 	TCHAR path[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH, path);
-	DeviceManager* pdm = new DeviceManager(); 
+	CDeviceManager* pdm = new CDeviceManager(); 
 	
-	if(!pdm->TXEExecutableFileExsits())
-	{
-		AddLog(_T("TXEI_SEC_TOOLS 文件不存在!"));
-		delete pdm;
-		return -1;
-	}
-	AddLog(pdm->adbPushToSdcard(_T(" flash txefileset ./key.dat")));
-	if(!pdm->m_Scuccess) 
+	if(!pdm->RemoteCmd(_T("fastboot.exe"), _T(" flash txefileset ./key.dat"))) 
 	{
 		goto __end;
 	}
-	AddLog(pdm->adbPushToSdcard(_T(" oem txe TXEI_SEC_TOOLS -acd-write 1 /logs/tmp 128 128")));
-	if(!pdm->m_Scuccess) 
+	AddLog(pdm->GetCmdResult());
+	if(!pdm->RemoteCmd(_T("fastboot.exe"), _T(" oem txe TXEI_SEC_TOOLS -acd-write 1 /logs/tmp 128 128"))) 
 	{
 		goto __end;
 	}
+	AddLog(pdm->GetCmdResult());
 
-	//AddLog(_T("Keybox 烧写成功!"));
 	delete pdm;
 	return 0;
 
 __end:
-	//AddLog(_T("Keybox 烧写失败!"));
+	AddLog(pdm->GetCmdResult());
 	delete pdm;
 	return -1;
 }
@@ -486,9 +491,9 @@ int CProvisionToolDlg::BuildKeyBox(CString filePath)
 		pXmlNamedNodeMap.Release();
 		return -1;
 	}
-	widevine_File.Write((char*)(_bstr_t)pXmlNode->text, strlen((char*)(_bstr_t)pXmlNode->text));
+	widevine_File.Write((char*)(_bstr_t)pXmlNode->text, (DWORD)strlen((char*)(_bstr_t)pXmlNode->text));
 		
-	int nullTerminatedCount = 32 - strlen((char*)(_bstr_t)pXmlNode->text);
+	int nullTerminatedCount = 32 - (int)strlen((char*)(_bstr_t)pXmlNode->text);
 	if(nullTerminatedCount > 0) 
 	{
 		for(int i = 0; i < nullTerminatedCount ; i++)
@@ -509,7 +514,7 @@ int CProvisionToolDlg::BuildKeyBox(CString filePath)
 		size_t len = 0;
 		char* str = String2MultiChar(childNodeValue);
 		BYTE* buf2 = HexStr2BinBuf(str,&len);
-		widevine_File.Write(buf2, len);
+		widevine_File.Write(buf2, (DWORD)len);
 		free(buf2);
 		delete str;
 	}
@@ -662,40 +667,23 @@ void CProvisionToolDlg::AddLog(CString log)
 
 void CProvisionToolDlg::ReadDevice(void)
 {
+	BOOL bRet = TRUE;
 	CProgressCtrl* pCtrl = (CProgressCtrl*)GetDlgItem(IDC_BURNPRG);
 	((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hNABitmap);
 	pCtrl->SetPos(0);
 	//SetDlgItemText(IDC_CMDLOG,_T(""));
 
-	DeviceManager* pdm = new DeviceManager(); 
-	BOOL isCC6Exist = pdm->CC6_UMIP_ACCESS_APPExecutableFileExsits();
+	CDeviceManager* pdm = new CDeviceManager(); 
 	pCtrl->SetPos(30);
-	if(!isCC6Exist) 
-	{
-		AddLog(pdm->adbPushToSdcard(_T(" oem txe TXEI_SEC_TOOLS -acd-read 1 /logs/test.dat")));
-
-	} 
-	else 
-	{
-		AddLog(pdm->adbPushToSdcard(_T(" oem txe TXEI_SEC_TOOLS -acd-read 1 /logs/test.dat")));
-	}
+	bRet &= pdm->RemoteCmd(_T("fastboot.exe"), _T(" oem txe TXEI_SEC_TOOLS -acd-read 1 /logs/test.dat"));
+	AddLog(pdm->GetCmdResult());
 	pCtrl->SetPos(70);
 	
-	if(pdm->m_Scuccess) 
-	{
-		if(!isCC6Exist)
-		{
-			AddLog(pdm->adbPushToSdcard(_T(" oem txe cat /logs/test.dat")));
-		} 
-		else 
-		{
-			AddLog(pdm->adbPushToSdcard(_T(" oem txe cat /logs/test.dat")));
-		}
-
-	}
+	bRet &= pdm->RemoteCmd(_T("fastboot.exe"), _T(" oem txe cat /logs/test.dat"));
+	AddLog(pdm->GetCmdResult());
 	pCtrl->SetPos(100);
 	//read key box
-	if(pdm->m_Result != _T("")) {
+	if(bRet) {
 		//MessageBox(_T("Read keybox succeeds") , _T("Info"), MB_ICONINFORMATION);
 		((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hSuccessBitmap);
 	}
@@ -753,7 +741,7 @@ int CProvisionToolDlg::WriteDevice(void)
 			fileName = fileFind.GetFilePath();
 			if (fp.Open(fileName,CFile::modeRead|CFile::typeBinary))
 			{
-				DWORD len = fp.GetLength();
+				DWORD len = (DWORD)fp.GetLength();
 				char* tmpBuff = new char[len+1];
 				memset(tmpBuff,0,len+1);
 				fp.Read(tmpBuff,len);
@@ -780,8 +768,7 @@ int CProvisionToolDlg::WriteDevice(void)
 
 	int pos,pos2 = fileName.ReverseFind(_T('\\'));
 	CString outDir=fileName.Left(pos2+1)+_T("backup");
-	DeviceManager* pdm = new DeviceManager(); 
-	BOOL isCC6Exist;
+	CDeviceManager* pdm = new CDeviceManager(); 
 
 	if (BuildSN(snStr))
 	{
@@ -805,35 +792,15 @@ int CProvisionToolDlg::WriteDevice(void)
 	pCtrl->SetPos(80);
 
 
-	isCC6Exist = pdm->CC6_UMIP_ACCESS_APPExecutableFileExsits();
-	if(!isCC6Exist) 
-	{
-		AddLog(pdm->adbPushToSdcard(_T(" oem txe TXEI_SEC_TOOLS -acd-read 1 /logs/test.dat")));
-
-	} 
-	else 
-	{
-		AddLog(pdm->adbPushToSdcard(_T(" oem txe TXEI_SEC_TOOLS -acd-read 1 /logs/test.dat")));
-	}
-	
-	if(pdm->m_Scuccess) 
-	{
-		if(!isCC6Exist)
-		{
-			AddLog(pdm->adbPushToSdcard(_T(" oem txe cat /logs/test.dat")));
-		} 
-		else 
-		{
-			AddLog(pdm->adbPushToSdcard(_T(" oem txe cat /logs/test.dat")));
-		}
-
-	}
+	pdm->RemoteCmd(_T("fastboot.exe"), _T(" oem txe TXEI_SEC_TOOLS -acd-read 1 /logs/test.dat"));	
+	AddLog(pdm->GetCmdResult());
+	pdm->RemoteCmd(_T("fastboot.exe"), _T(" oem txe cat /logs/test.dat"));
+	AddLog(pdm->GetCmdResult());
 	pCtrl->SetPos(100);
 	//read key box
-	pos=pdm->m_Result.Find(snStr);
-	if(pdm->m_Result != _T("") && pos != -1) 
+	pos=pdm->GetCmdResult().Find(snStr);
+	if(pos != -1) 
 	{
-		//MessageBox(_T("Read keybox succeeds") , _T("Info"), MB_ICONINFORMATION);
 		((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hSuccessBitmap);
 	}
 	else
@@ -842,7 +809,6 @@ int CProvisionToolDlg::WriteDevice(void)
 	}
 
 
-	//((CStatic*)GetDlgItem(IDC_STATUS2))->SetBitmap(m_hSuccessBitmap);
 	CreateDirectory(outDir,NULL);
 	outDir = outDir+fileName.Right(fileName.GetLength()-pos2);
 	MoveFileEx(fileName,outDir,MOVEFILE_REPLACE_EXISTING);

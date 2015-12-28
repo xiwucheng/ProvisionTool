@@ -54,7 +54,7 @@ BOOL CProvisionToolApp::InitInstance()
 	{
 		AfxMessageBox(_T("程序已在运行中！"),MB_ICONERROR);
 		//HWND hWnd=FindWindow(NULL,_T("ProvisionTool_v1.0.2"));
-		HWND hWnd=FindWindow(NULL,_T("ProvisionTool_v1.0.2"));
+		HWND hWnd=FindWindow(NULL,_T("ProvisionTool_v1.0.3"));
 		if (hWnd)
 		{
 			if(!IsWindowVisible(hWnd))
